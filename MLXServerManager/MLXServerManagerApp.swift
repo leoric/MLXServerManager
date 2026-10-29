@@ -11,6 +11,7 @@ import SwiftUI
 struct MLXServerManagerApp: App {
     @NSApplicationDelegateAdaptor(ApplicationLifecycleDelegate.self) private var applicationDelegate
     @StateObject private var viewModel = AppViewModel()
+    @StateObject private var externalMonitor = ExternalServerMonitor()
 
     var body: some Scene {
         WindowGroup("MLX Server Manager", id: "main") {
@@ -23,9 +24,11 @@ struct MLXServerManagerApp: App {
         .windowStyle(.hiddenTitleBar)
 
         MenuBarExtra {
-            MenuBarView(viewModel: viewModel)
+            MenuBarView(viewModel: viewModel, externalMonitor: externalMonitor)
         } label: {
-            Image(systemName: viewModel.menuBarIconState.symbolName)
+            Image(systemName: viewModel.menuBarIconState
+                .withExternalServers(!externalMonitor.servers.isEmpty)
+                .symbolName)
                 .accessibilityLabel(viewModel.menuBarTitle)
         }
     }

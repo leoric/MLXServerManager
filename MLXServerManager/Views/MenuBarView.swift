@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     @ObservedObject var viewModel: AppViewModel
+    @ObservedObject var externalMonitor: ExternalServerMonitor
     @Environment(\.openWindow) private var openWindow
 
     private var strings: AppLocalization {
@@ -13,8 +14,27 @@ struct MenuBarView: View {
         strings.text(english: english, japanese: japanese)
     }
 
+    /// The managed-server status says "Stopped" for a server the app didn't start.
+    /// Only in that case, report the outside server instead.
+    private var outsideServerOnly: ExternalServerProcess? {
+        guard case .stopped = viewModel.runtimeState,
+              viewModel.runningModelIDs.isEmpty
+        else { return nil }
+        return externalMonitor.servers.first
+    }
+
     private var menuBarTitle: String {
-        viewModel.menuBarTitle
+        if outsideServerOnly != nil {
+            return t("MLX: Running outside the app", "MLX: アプリ外で実行中")
+        }
+        return viewModel.menuBarTitle
+    }
+
+    private var menuBarDetail: String {
+        if let server = outsideServerOnly {
+            return externalServerSummary(server)
+        }
+        return viewModel.runtimeState.localizedBadgeDetail(language: viewModel.settings.uiLanguage)
     }
 
     var body: some View {
@@ -22,7 +42,7 @@ struct MenuBarView: View {
             Text(menuBarTitle)
                 .font(.headline)
 
-            Text(viewModel.runtimeState.localizedBadgeDetail(language: viewModel.settings.uiLanguage))
+            Text(menuBarDetail)
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -81,6 +101,20 @@ struct MenuBarView: View {
                     .textSelection(.enabled)
             }
 
+            if !externalMonitor.servers.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(t("Running outside the app", "アプリ外で実行中"))
+                        .font(.caption.weight(.semibold))
+                    ForEach(externalMonitor.servers) { server in
+                        Text(externalServerSummary(server))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
+            }
+
             Button(t("Manage…", "管理…")) {
                 openMainWindow()
             }
@@ -93,6 +127,18 @@ struct MenuBarView: View {
         }
         .padding(.vertical, 6)
         .frame(width: 280, alignment: .leading)
+    }
+
+    private func externalServerSummary(_ server: ExternalServerProcess) -> String {
+        var parts = [server.backend.localizedTitle(language: viewModel.settings.uiLanguage)]
+        if let port = server.port {
+            parts.append(":\(port)")
+        }
+        if let model = server.model {
+            parts.append(model)
+        }
+        parts.append("pid \(server.processIdentifier)")
+        return parts.joined(separator: " · ")
     }
 
     private func openMainWindow() {

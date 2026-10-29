@@ -1,9 +1,10 @@
 import Foundation
 
-/// What the menu bar icon shows. Mirrors the status icon of a typical
-/// menu bar server manager: outline = off, filled = on, arrows = busy.
+/// What the menu bar icon shows: outline = off, filled = on, arrows = busy,
+/// arrow-out = a server is running outside the app (nothing managed is running).
 nonisolated enum MenuBarIconState: Equatable, Sendable {
     case off
+    case external
     case busy
     case on
 
@@ -11,8 +12,14 @@ nonisolated enum MenuBarIconState: Equatable, Sendable {
         switch self {
         case .on: "bolt.circle.fill"
         case .busy: "arrow.triangle.2.circlepath.circle"
+        case .external: "arrow.up.right.circle"
         case .off: "bolt.circle"
         }
+    }
+
+    /// Managed state always wins; external servers only change an otherwise idle icon.
+    func withExternalServers(_ hasExternalServers: Bool) -> MenuBarIconState {
+        self == .off && hasExternalServers ? .external : self
     }
 }
 
