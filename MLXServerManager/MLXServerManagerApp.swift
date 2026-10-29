@@ -25,7 +25,8 @@ struct MLXServerManagerApp: App {
         MenuBarExtra {
             MenuBarView(viewModel: viewModel)
         } label: {
-            Label(viewModel.menuBarTitle, systemImage: "server.rack")
+            Image(systemName: viewModel.menuBarIconState.symbolName)
+                .accessibilityLabel(viewModel.menuBarTitle)
         }
     }
 }

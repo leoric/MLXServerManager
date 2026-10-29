@@ -81,7 +81,7 @@ struct MenuBarView: View {
                     .textSelection(.enabled)
             }
 
-            Button(t("Open App", "アプリを開く")) {
+            Button(t("Manage…", "管理…")) {
                 openMainWindow()
             }
 
