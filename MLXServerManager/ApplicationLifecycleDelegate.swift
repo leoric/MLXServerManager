@@ -69,7 +69,12 @@ final class ApplicationLifecycleDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handleWindowClosed(_ closing: NSWindow) {
-        guard let settings = viewModel?.settings, settings.backgroundOnLastWindowClose else { return }
+        guard let settings = viewModel?.settings else { return }
+        let action = LastWindowCloseAction.resolve(
+            backgroundOnLastWindowClose: settings.backgroundOnLastWindowClose,
+            showMenuBarIcon: settings.showMenuBarIcon
+        )
+        guard action != .keepInDock else { return }
 
         let hasOtherWindows = NSApp.windows.contains { window in
             window !== closing
@@ -78,12 +83,15 @@ final class ApplicationLifecycleDelegate: NSObject, NSApplicationDelegate {
         }
         guard !hasOtherWindows else { return }
 
-        if settings.showMenuBarIcon {
+        switch action {
+        case .hideDockIcon:
             NSApp.setActivationPolicy(.accessory)
-        } else {
+        case .quit:
             // No menu bar icon to come back to: quit through the normal path
             // (same confirmation / server shutdown handling as ⌘Q).
             NSApp.terminate(nil)
+        case .keepInDock:
+            break
         }
     }
 

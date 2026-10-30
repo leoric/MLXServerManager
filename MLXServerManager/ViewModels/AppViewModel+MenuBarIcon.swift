@@ -23,27 +23,50 @@ nonisolated enum MenuBarIconState: Equatable, Sendable {
     }
 }
 
-extension AppViewModel {
+/// What the icon needs to know about one model profile.
+nonisolated struct MenuBarProfileSnapshot: Equatable, Sendable {
+    var runtimeState: ModelRuntimeState
+    /// A process started by this app is alive for the profile.
+    var isProcessRunning: Bool
+    /// The profile is starting, loading, checking readiness or stopping.
+    var isTransitioning: Bool
+}
+
+extension MenuBarIconState {
     /// `.on` as soon as any profile is serving, regardless of backend
     /// (Rapid-MLX or mlx_lm): process tracking is keyed by profile, not backend.
     /// `.busy` while a profile is starting, loading or stopping and nothing is
     /// serving yet. `.off` otherwise.
-    var menuBarIconState: MenuBarIconState {
-        let isAnyModelOn = models.contains { model in
-            guard !isModelTransitioning(model) else { return false }
-            switch runtimeState(for: model) {
+    static func resolve(profiles: [MenuBarProfileSnapshot]) -> MenuBarIconState {
+        let isAnyProfileOn = profiles.contains { profile in
+            guard !profile.isTransitioning else { return false }
+            switch profile.runtimeState {
             case .ready, .degraded, .adoptedExternalServer:
                 return true
             default:
-                return isModelRunning(model)
+                return profile.isProcessRunning
             }
         }
-        if isAnyModelOn {
+        if isAnyProfileOn {
             return .on
         }
-        if models.contains(where: isModelTransitioning) {
+        if profiles.contains(where: \.isTransitioning) {
             return .busy
         }
         return .off
+    }
+}
+
+extension AppViewModel {
+    var menuBarIconState: MenuBarIconState {
+        MenuBarIconState.resolve(
+            profiles: models.map { model in
+                MenuBarProfileSnapshot(
+                    runtimeState: runtimeState(for: model),
+                    isProcessRunning: isModelRunning(model),
+                    isTransitioning: isModelTransitioning(model)
+                )
+            }
+        )
     }
 }
