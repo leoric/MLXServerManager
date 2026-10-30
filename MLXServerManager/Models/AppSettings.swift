@@ -16,6 +16,11 @@ nonisolated struct AppSettings: Codable, Hashable {
     var resourceCalibrationRecords: [ResourceCalibrationRecord]
     var uiLanguage: AppLanguage
     var uiAppearance: String
+    /// Show the status item in the menu bar.
+    var showMenuBarIcon: Bool
+    /// When the last window closes: hide the Dock icon and keep running (menu bar icon on),
+    /// or quit (menu bar icon off). When false the app simply stays in the Dock.
+    var backgroundOnLastWindowClose: Bool
 
     static let defaults = AppSettings(
         mlxServerExecutablePath: "",
@@ -32,7 +37,9 @@ nonisolated struct AppSettings: Codable, Hashable {
         launchPlans: [],
         resourceCalibrationRecords: [],
         uiLanguage: .system,
-        uiAppearance: "system"
+        uiAppearance: "system",
+        showMenuBarIcon: true,
+        backgroundOnLastWindowClose: false
     )
 
     init(
@@ -50,7 +57,9 @@ nonisolated struct AppSettings: Codable, Hashable {
         launchPlans: [LaunchPlanDefinition] = [],
         resourceCalibrationRecords: [ResourceCalibrationRecord] = [],
         uiLanguage: AppLanguage = .system,
-        uiAppearance: String = "system"
+        uiAppearance: String = "system",
+        showMenuBarIcon: Bool = true,
+        backgroundOnLastWindowClose: Bool = false
     ) {
         self.mlxServerExecutablePath = mlxServerExecutablePath
         self.rapidMLXExecutablePath = rapidMLXExecutablePath
@@ -67,6 +76,8 @@ nonisolated struct AppSettings: Codable, Hashable {
         self.resourceCalibrationRecords = Array(resourceCalibrationRecords.suffix(100))
         self.uiLanguage = uiLanguage
         self.uiAppearance = uiAppearance
+        self.showMenuBarIcon = showMenuBarIcon
+        self.backgroundOnLastWindowClose = backgroundOnLastWindowClose
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -85,6 +96,8 @@ nonisolated struct AppSettings: Codable, Hashable {
         case resourceCalibrationRecords
         case uiLanguage
         case uiAppearance
+        case showMenuBarIcon
+        case backgroundOnLastWindowClose
     }
 
     init(from decoder: Decoder) throws {
@@ -109,6 +122,8 @@ nonisolated struct AppSettings: Codable, Hashable {
         )
         uiLanguage = try container.decodeIfPresent(AppLanguage.self, forKey: .uiLanguage) ?? .system
         uiAppearance = try container.decodeIfPresent(String.self, forKey: .uiAppearance) ?? "system"
+        showMenuBarIcon = try container.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? true
+        backgroundOnLastWindowClose = try container.decodeIfPresent(Bool.self, forKey: .backgroundOnLastWindowClose) ?? false
     }
 
     func executablePath(for backend: InferenceBackend) -> String {

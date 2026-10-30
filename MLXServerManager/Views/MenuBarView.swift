@@ -142,6 +142,8 @@ struct MenuBarView: View {
     }
 
     private func openMainWindow() {
+        // The Dock icon is hidden while only the menu bar icon is running.
+        NSApplication.shared.setActivationPolicy(.regular)
         openWindow(id: "main")
         NSApplication.shared.activate(ignoringOtherApps: true)
     }

@@ -12,6 +12,8 @@ struct SettingsPanelView: View {
     @Binding var maxConcurrentModelDownloads: Int
     @Binding var language: AppLanguage
     @Binding var appearance: String
+    @Binding var showMenuBarIcon: Bool
+    @Binding var backgroundOnLastWindowClose: Bool
     let settingsDirectoryPath: String
     let runtimeReadinessState: RuntimeReadinessViewState
     let runtimeSetupAssistantState: RuntimeSetupAssistantViewState
@@ -152,6 +154,8 @@ struct SettingsPanelView: View {
                     rows: [
                         AnyView(languageSettingRow),
                         AnyView(themeSettingRow),
+                        AnyView(menuBarIconSettingRow),
+                        AnyView(lastWindowCloseSettingRow),
                         AnyView(editableSettingRow(
                             title: t("API key placeholder", "APIキーのプレースホルダー"),
                             detail: t(
@@ -879,6 +883,50 @@ struct SettingsPanelView: View {
             }
             .labelsHidden()
             .pickerStyle(.menu)
+            .frame(width: controlWidth, height: 30, alignment: .leading)
+        }
+        .padding(.horizontal, rowHorizontalPadding)
+        .padding(.vertical, rowVerticalPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var menuBarIconSettingRow: some View {
+        toggleSettingRow(
+            title: t("Menu bar icon", "メニューバーアイコン"),
+            detail: t(
+                "Show a status icon in the menu bar. It shows whether a model is running, including servers started outside this app.",
+                "メニューバーにステータスアイコンを表示します。このアプリ外で起動したサーバーも含め、モデルの実行状態を示します。"
+            ),
+            isOn: $showMenuBarIcon
+        )
+    }
+
+    private var lastWindowCloseSettingRow: some View {
+        toggleSettingRow(
+            title: t("When all windows are closed", "すべてのウインドウを閉じたとき"),
+            detail: showMenuBarIcon
+                ? t(
+                    "Hide the Dock icon and keep running in the menu bar. Turn this off to keep the app in the Dock.",
+                    "Dockアイコンを非表示にして、メニューバーで実行を続けます。オフにするとDockに残ります。"
+                )
+                : t(
+                    "Quit the app, because the menu bar icon is turned off. Turn this off to keep the app in the Dock.",
+                    "メニューバーアイコンがオフのため、アプリを終了します。オフにするとDockに残ります。"
+                ),
+            isOn: $backgroundOnLastWindowClose
+        )
+    }
+
+    private func toggleSettingRow(title: String, detail: String, isOn: Binding<Bool>) -> some View {
+        HStack(alignment: .center, spacing: 22) {
+            rowText(title: title, detail: detail)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Toggle(isOn: isOn) {
+                EmptyView()
+            }
+            .labelsHidden()
+            .toggleStyle(.switch)
             .frame(width: controlWidth, height: 30, alignment: .leading)
         }
         .padding(.horizontal, rowHorizontalPadding)

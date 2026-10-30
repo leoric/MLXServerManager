@@ -21,6 +21,8 @@ struct SettingsSurfaceView: View {
             maxConcurrentModelDownloads: $draftSettings.maxConcurrentModelDownloads,
             language: $draftSettings.uiLanguage,
             appearance: $draftSettings.uiAppearance,
+            showMenuBarIcon: $draftSettings.showMenuBarIcon,
+            backgroundOnLastWindowClose: $draftSettings.backgroundOnLastWindowClose,
             settingsDirectoryPath: viewModel.settingsDirectoryPath,
             runtimeReadinessState: viewModel.runtimeReadinessViewState,
             runtimeSetupAssistantState: viewModel.runtimeSetupAssistantViewState,

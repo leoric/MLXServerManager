@@ -23,7 +23,7 @@ struct MLXServerManagerApp: App {
         .defaultSize(width: 1280, height: 820)
         .windowStyle(.hiddenTitleBar)
 
-        MenuBarExtra {
+        MenuBarExtra(isInserted: showMenuBarIcon) {
             MenuBarView(viewModel: viewModel, externalMonitor: externalMonitor)
         } label: {
             Image(systemName: viewModel.menuBarIconState
@@ -31,5 +31,21 @@ struct MLXServerManagerApp: App {
                 .symbolName)
                 .accessibilityLabel(viewModel.menuBarTitle)
         }
+    }
+
+    /// Driven by the setting; also written back if the user removes the icon with ⌘-drag.
+    private var showMenuBarIcon: Binding<Bool> {
+        Binding(
+            get: { viewModel.settings.showMenuBarIcon },
+            set: { newValue in
+                guard newValue != viewModel.settings.showMenuBarIcon else { return }
+                var next = viewModel.settings
+                next.showMenuBarIcon = newValue
+                _ = viewModel.saveSettingsRequested(next)
+                if !newValue {
+                    applicationDelegate.menuBarIconWasRemoved()
+                }
+            }
+        )
     }
 }
