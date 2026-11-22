@@ -18,6 +18,10 @@ struct MLXServerManagerApp: App {
             ContentView(viewModel: viewModel)
                 .onAppear {
                     applicationDelegate.viewModel = viewModel
+                    // The outside-server list is only shown by the menu bar icon.
+                    externalMonitor.isScanningEnabled = { [weak viewModel] in
+                        viewModel?.settings.showMenuBarIcon ?? true
+                    }
                 }
         }
         .defaultSize(width: 1280, height: 820)

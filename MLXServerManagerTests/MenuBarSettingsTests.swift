@@ -48,4 +48,32 @@ final class MenuBarSettingsTests: XCTestCase {
         XCTAssertEqual(action(background: true, icon: true), .hideDockIcon)
         XCTAssertEqual(action(background: true, icon: false), .quit)
     }
+
+    // MARK: - Icon removed from the menu bar (⌘-drag)
+
+    private func makeViewModel() -> AppViewModel {
+        AppViewModel(
+            settingsStore: SettingsStore(
+                appDirectoryName: "MLXServerManagerTests-\(UUID().uuidString)"
+            )
+        )
+    }
+
+    func testRemovingTheIconIsPersistedToSettings() {
+        let viewModel = makeViewModel()
+        XCTAssertTrue(viewModel.settings.showMenuBarIcon)
+
+        XCTAssertTrue(viewModel.menuBarIconVisibilityChanged(false))
+
+        XCTAssertFalse(viewModel.settings.showMenuBarIcon)
+    }
+
+    func testUnchangedVisibilityDoesNotSave() {
+        let viewModel = makeViewModel()
+        let before = viewModel.settings
+
+        XCTAssertTrue(viewModel.menuBarIconVisibilityChanged(true))
+
+        XCTAssertEqual(viewModel.settings, before)
+    }
 }
