@@ -70,3 +70,17 @@ extension AppViewModel {
         )
     }
 }
+
+extension AppViewModel {
+    /// Applies a menu bar icon visibility change that did not come from the Settings draft
+    /// (for example the user ⌘-dragged the icon out of the menu bar) and persists it.
+    ///
+    /// Returns `false` when saving failed; the failure is logged by `saveSettingsRequested`.
+    @discardableResult
+    func menuBarIconVisibilityChanged(_ isVisible: Bool) -> Bool {
+        guard isVisible != settings.showMenuBarIcon else { return true }
+        var next = settings
+        next.showMenuBarIcon = isVisible
+        return saveSettingsRequested(next)
+    }
+}

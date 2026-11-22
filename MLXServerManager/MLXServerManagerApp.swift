@@ -41,12 +41,10 @@ struct MLXServerManagerApp: App {
         Binding(
             get: { viewModel.settings.showMenuBarIcon },
             set: { newValue in
-                guard newValue != viewModel.settings.showMenuBarIcon else { return }
-                var next = viewModel.settings
-                next.showMenuBarIcon = newValue
-                _ = viewModel.saveSettingsRequested(next)
+                viewModel.menuBarIconVisibilityChanged(newValue)
                 if !newValue {
-                    applicationDelegate.menuBarIconWasRemoved()
+                    // Whatever the save outcome, the icon is gone for now: keep the app reachable.
+                    MainWindowPresenter.restoreDockIconIfNeeded()
                 }
             }
         )

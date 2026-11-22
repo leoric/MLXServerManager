@@ -27,7 +27,7 @@ final class ApplicationLifecycleDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        restoreDockIconIfNeeded()
+        MainWindowPresenter.restoreDockIconIfNeeded()
         return true
     }
 
@@ -47,16 +47,10 @@ final class ApplicationLifecycleDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.removeObserver(self)
     }
 
-    /// Called when the menu bar icon is removed (e.g. ⌘-dragged out). If the Dock icon is hidden
-    /// at that moment the app would be unreachable, so bring the Dock icon back.
-    func menuBarIconWasRemoved() {
-        restoreDockIconIfNeeded()
-    }
-
     // MARK: - Last window closed
 
     @objc private func windowWillClose(_ notification: Notification) {
-        guard let closing = notification.object as? NSWindow, Self.isContentWindow(closing) else { return }
+        guard let closing = notification.object as? NSWindow, MainWindowPresenter.isContentWindow(closing) else { return }
         // Evaluate after AppKit has finished closing the window.
         Task { @MainActor [weak self] in
             self?.handleWindowClosed(closing)
@@ -64,8 +58,8 @@ final class ApplicationLifecycleDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func windowDidBecomeMain(_ notification: Notification) {
-        guard let window = notification.object as? NSWindow, Self.isContentWindow(window) else { return }
-        restoreDockIconIfNeeded()
+        guard let window = notification.object as? NSWindow, MainWindowPresenter.isContentWindow(window) else { return }
+        MainWindowPresenter.restoreDockIconIfNeeded()
     }
 
     private func handleWindowClosed(_ closing: NSWindow) {
@@ -76,16 +70,11 @@ final class ApplicationLifecycleDelegate: NSObject, NSApplicationDelegate {
         )
         guard action != .keepInDock else { return }
 
-        let hasOtherWindows = NSApp.windows.contains { window in
-            window !== closing
-                && Self.isContentWindow(window)
-                && (window.isVisible || window.isMiniaturized)
-        }
-        guard !hasOtherWindows else { return }
+        guard !MainWindowPresenter.hasOtherContentWindows(excluding: closing) else { return }
 
         switch action {
         case .hideDockIcon:
-            NSApp.setActivationPolicy(.accessory)
+            MainWindowPresenter.hideDockIcon()
         case .quit:
             // No menu bar icon to come back to: quit through the normal path
             // (same confirmation / server shutdown handling as ⌘Q).
@@ -93,20 +82,6 @@ final class ApplicationLifecycleDelegate: NSObject, NSApplicationDelegate {
         case .keepInDock:
             break
         }
-    }
-
-    private func restoreDockIconIfNeeded() {
-        guard NSApp.activationPolicy() != .regular else { return }
-        NSApp.setActivationPolicy(.regular)
-        NSApp.activate(ignoringOtherApps: true)
-    }
-
-    /// The main app window, as opposed to the status item, sheets, panels and alerts.
-    private static func isContentWindow(_ window: NSWindow) -> Bool {
-        window.canBecomeMain
-            && window.level == .normal
-            && window.sheetParent == nil
-            && !(window is NSPanel)
     }
 
     @objc private func workspaceWillPowerOff(_ notification: Notification) {
