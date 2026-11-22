@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 /// Keeps a live list of inference servers running outside the app.
 /// Polls the process table while scanning is enabled; cheap (one `ps` every few seconds).

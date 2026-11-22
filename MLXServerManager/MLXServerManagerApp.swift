@@ -17,10 +17,11 @@ struct MLXServerManagerApp: App {
         WindowGroup("MLX Server Manager", id: "main") {
             ContentView(viewModel: viewModel)
                 .onAppear {
-                    applicationDelegate.viewModel = viewModel
+                    let model = viewModel
+                    applicationDelegate.viewModel = model
                     // The outside-server list is only shown by the menu bar icon.
-                    externalMonitor.isScanningEnabled = { [weak viewModel] in
-                        viewModel?.settings.showMenuBarIcon ?? true
+                    externalMonitor.isScanningEnabled = { [weak model] in
+                        model?.settings.showMenuBarIcon ?? true
                     }
                 }
         }

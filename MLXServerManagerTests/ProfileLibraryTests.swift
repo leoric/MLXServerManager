@@ -113,7 +113,7 @@ final class ProfileLibraryTests: XCTestCase {
     }
 
     func testComparisonRowsMarkOnlyChangedSettings() {
-        var first = makeModel(id: "org/a", name: "A", port: 8001)
+        let first = makeModel(id: "org/a", name: "A", port: 8001)
         var second = makeModel(id: "org/b", name: "B", port: 8002)
         second.family = first.family
         second.quantization = first.quantization

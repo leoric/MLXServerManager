@@ -151,18 +151,24 @@ private struct CapabilityFlowFixture {
 private actor StubRuntimeOptionCapabilityProvider: RuntimeOptionCapabilityProviding {
     private let result: RuntimeOptionCapabilityProbeResult
     private var count = 0
+    private var backends: [InferenceBackend] = []
 
     init(result: RuntimeOptionCapabilityProbeResult) {
         self.result = result
     }
 
-    func capabilities(executablePath: String) async -> RuntimeOptionCapabilityProbeResult {
+    func capabilities(executablePath: String, backend: InferenceBackend) async -> RuntimeOptionCapabilityProbeResult {
         count += 1
+        backends.append(backend)
         return result
     }
 
     func requestCount() -> Int {
         count
+    }
+
+    func requestedBackends() -> [InferenceBackend] {
+        backends
     }
 }
 
