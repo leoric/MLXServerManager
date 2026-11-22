@@ -40,7 +40,7 @@ The menu bar should expose:
 - `Stop`
 - `Restart`
 - `Run Diagnostics`
-- `Open App`
+- `Manage…` (formerly `Open App`)
 - `Connection Settings`
 - `Quit`
 
@@ -57,7 +57,7 @@ If copy actions are added later, they should reuse the existing `ConnectionConfi
 
 ## Window Behavior
 
-`Open App` should show or focus the main app window. It should not reset runtime state, reload settings unnecessarily, or start the server.
+`Manage…` should show or focus the main app window. It should not reset runtime state, reload settings unnecessarily, or start the server.
 
 ## Quit Behavior
 
@@ -107,7 +107,7 @@ Manual tests should cover:
 - Confirm the main window and menu bar show the same managed server status.
 - Open the menu bar item and confirm Base URL is visible.
 - Open the menu bar item and confirm Model ID is visible.
-- Click `Open App` and confirm the main app window is shown and activated.
+- Click `Manage…` and confirm the main app window is shown and activated.
 - Click `Start` from the menu bar and confirm the managed server starts.
 - Confirm the main window status changes from starting to ready after Start.
 - Confirm the menu bar title changes to `MLX: ready` after Start.

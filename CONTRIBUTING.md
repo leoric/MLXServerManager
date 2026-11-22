@@ -2,10 +2,10 @@
 
 Thank you for considering a contribution to MLX Server Manager.
 
-This project is intentionally narrow: it is a macOS GUI for managing pure `mlx_lm.server` in Direct Mode.
+This project is intentionally narrow: it is a macOS GUI for managing `mlx_lm.server` (and Rapid-MLX, which the app already supports) in Direct Mode.
 
 ```text
-OpenAI-compatible client -> mlx_lm.server -> MLX model
+OpenAI-compatible client -> mlx_lm.server (or Rapid-MLX) -> MLX model
 ```
 
 The app should remain outside the inference request path.
@@ -23,6 +23,7 @@ MLX Server Manager may manage:
 - Memory display.
 - Model profiles.
 - OpenAI-compatible connection setting copy actions.
+- Showing, display-only, inference servers that were started outside the app. Never adopt, signal, stop, or read logs from them without the explicit Adopt flow.
 - Setup diagnostics.
 
 ## Direct Mode Boundary
@@ -35,7 +36,7 @@ The app should not become:
 - A Chat UI.
 - A model downloader.
 - A model deletion tool.
-- A multi-backend wrapper.
+- A multi-backend wrapper or router. The supported backends (`mlx_lm.server` and Rapid-MLX) are each launched and managed directly; do not add new backends or a layer that sits between clients and a server.
 - A replacement for `mlx-lm` setup.
 
 ## Welcome Contributions
@@ -60,7 +61,7 @@ Please do not propose changes that add:
 - Model downloader behavior.
 - Model deletion.
 - Hugging Face cache deletion.
-- Multi-backend wrapper behavior.
+- Multi-backend wrapper or routing behavior, or support for additional backends without prior discussion.
 - Automatic tuning defaults without benchmark evidence.
 - Telemetry, analytics, crash reporting, or external log sending.
 

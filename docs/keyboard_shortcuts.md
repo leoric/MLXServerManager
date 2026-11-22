@@ -12,7 +12,7 @@ MLX Server Manager registers its keyboard shortcuts as standard macOS menu comma
 
 - `⌘,` uses the standard macOS binding for application settings and replaces the `Settings…` slot of the application menu.
 - If the main window is open, it is brought to the front and switches to Settings.
-- If the main window was closed or minimized (the app keeps running from the menu bar), it is reopened or restored and then shows Settings. No duplicate window is created while one exists.
+- If the main window was closed or minimized (the app keeps running in the Dock, or from the menu bar if **When all windows are closed** is on), it is reopened or restored and then shows Settings. No duplicate window is created while one exists.
 - If Settings is already shown, the shortcut only brings the window forward.
 - Unsaved Settings drafts are not saved or discarded by the shortcut itself. Existing Settings behavior still applies: leaving the Settings destination discards the unsaved draft.
 - The menu item title follows the app language setting (English `Settings…`, Japanese `設定…`).

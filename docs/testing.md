@@ -89,7 +89,7 @@ Target service behavior without launching the full UI:
 - Confirm the main window and menu bar show the same status.
 - Open the menu bar item and confirm Base URL is visible.
 - Open the menu bar item and confirm Model ID is visible.
-- Click `Open App` and confirm the main window is shown and activated.
+- Click `Manage…` and confirm the main window is shown and activated.
 - Click `Start` from the menu bar and confirm the managed server starts.
 - Confirm the main window changes from starting to ready after Start.
 - Confirm the menu bar title changes to `MLX: ready` after Start.
@@ -118,7 +118,7 @@ Target service behavior without launching the full UI:
 - Press `⌘,` with the main window focused and confirm the Settings destination opens.
 - Open the application menu and confirm `Settings…` shows `⌘,`.
 - Switch the language to Japanese and confirm the menu item reads `設定…`.
-- Close the main window (the app keeps running in the menu bar), press `⌘,`, and confirm one main window reopens on Settings.
+- Close the main window (the app keeps running in the Dock, or from the menu bar if `When all windows are closed` is on), press `⌘,`, and confirm one main window reopens on Settings.
 - Minimize the main window, press `⌘,`, and confirm it is restored on Settings without a second window.
 - With Settings already visible, press `⌘,` and confirm nothing changes except the window coming forward.
 - Confirm `⌘,` does not start, stop, or restart servers, run diagnostics, or change saved settings.
@@ -531,7 +531,7 @@ xcodebuild \
 - Confirm menu bar Stop works.
 - Confirm menu bar Restart works.
 - Confirm menu bar Run Diagnostics works.
-- Confirm menu bar Open App brings the app window forward.
+- Confirm menu bar Manage… brings the app window forward.
 - Confirm menu bar Quit exits normally.
 - Confirm menu bar title has minimal Restart-required display when selected and running models differ.
 
@@ -662,7 +662,7 @@ Use this checklist for README first-run quick start maintenance.
 - Confirm Run Diagnostics works.
 - Confirm Logs remain readable.
 - Confirm Copy Logs and Clear Logs work.
-- Confirm Menu bar Start, Stop, Restart, Run Diagnostics, Open App, and Quit work.
+- Confirm Menu bar Start, Stop, Restart, Run Diagnostics, Manage…, and Quit work.
 - Confirm Connection Settings copy actions work.
 
 ### Maintenance Safety

@@ -332,6 +332,7 @@ As of the v50.0.0 development tree, while v40.0.0 remains the latest published b
 - Dashboard UI Refresh v1 as the stable display-oriented overview for operational state and connection guidance.
 - Lightweight Onboarding Guidance panel for first-run setup and connection state hints.
 - Menu bar quick actions.
+- Optional menu bar status icon (on / busy / off / outside-server) with a display-only list of `rapid-mlx` / `mlx_lm` servers started outside the app, and settings for hiding the icon and for what happens when the last window closes: [docs/menu_bar_icon.md](docs/menu_bar_icon.md).
 - Standard `⌘,` shortcut (Settings… in the application menu) to open Settings.
 - Logs readability improvements.
 - Separate memory-only Operational History with category and severity filters, model/endpoint context, copy, and clear actions.
@@ -513,5 +514,7 @@ All changes should be reviewed for:
 - Architecture: [docs/architecture.md](docs/architecture.md)
 - Testing: [docs/testing.md](docs/testing.md)
 - Keyboard shortcuts: [docs/keyboard_shortcuts.md](docs/keyboard_shortcuts.md)
+- Menu bar icon: [docs/menu_bar_icon.md](docs/menu_bar_icon.md)
+- Rapid-MLX help probing: [docs/rapid_mlx_help_probing.md](docs/rapid_mlx_help_probing.md)
 - Distribution: [docs/distribution.md](docs/distribution.md)
 - Behavioral contracts: [contracts/](contracts/)

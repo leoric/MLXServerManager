@@ -50,6 +50,7 @@ Users should be able to see when an OpenAI-compatible server appears to be avail
 - Do not add a Chat UI.
 - Do not add multi-backend routing.
 - Do not inspect process tables to take ownership automatically.
+  - The menu bar icon separately reads the process table (`ps`, `lsof`) to *display* `rapid-mlx` / `mlx_lm` servers started outside the app. That is read-only and never adopts, signals, stops, or collects logs from them. See [menu_bar_icon.md](menu_bar_icon.md).
 - Do not use inference requests for detection.
 
 ## Direct Mode Boundary

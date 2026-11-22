@@ -34,7 +34,7 @@ The app also looks for `rapid-mlx` and `mlx_lm` servers that it did not start, f
 
 1. Every 5 seconds the app reads the process table with `ps`.
 2. It keeps processes whose command line looks like Rapid-MLX or mlx-lm. The first word of the command must be a known launcher (`rapid-mlx`, `mlx_lm.server`, Python of any capitalization, `uv`, `uvx`, `pipx`, or a shell such as `bash`), and a later word must be `rapid-mlx`, `rapid_mlx`, `mlx_lm.server`, or `mlx_lm`.
-3. It runs `lsof` to confirm those processes are listening on a TCP port. This excludes `rapid-mlx --help`, `pip install rapid-mlx`, editors, and `grep`, and provides the real port.
+3. It runs `lsof` to confirm those processes are listening on a TCP port. This excludes `rapid-mlx --help`, `pip install rapid-mlx`, editors, and `grep`, and provides the real port. A listening process that is not a recognised `serve` command line is accepted only when the Rapid-MLX or mlx-lm name is the program being run: only launcher plumbing (`python`, `-m`, `uv run`, `env FOO=1`, a shell) may come before it. A name that merely appears as an argument, such as `python -m http.server -d ~/code/rapid-mlx`, is ignored.
 4. If `lsof` cannot run, it falls back to a stricter command-line match (`rapid-mlx serve ...`, `mlx_lm.server ...`) and reads the port from `--port` when given.
 
 Python is matched case-insensitively because Homebrew and python.org Python appear in `ps` as `.../Python.app/Contents/MacOS/Python`.
@@ -44,6 +44,7 @@ Python is matched case-insensitively because Homebrew and python.org Python appe
 - Servers started by this app, and their worker processes. Anything running under the app's own process is skipped.
 - Worker processes that share a listening socket with a parent server. The server is listed once.
 - Processes that match by name but are not listening.
+- Listening processes that only mention a Rapid-MLX or mlx-lm name as an argument (for example a directory path).
 
 ### What the app does with it
 
@@ -55,7 +56,7 @@ The servers are shown in the menu under **Running outside the app**, as `Backend
 
 - Detection is heuristic. Launchers other than those listed above, and command paths containing spaces, are not recognized.
 - If the app were sandboxed it could not see other processes; this has not been verified against the app's entitlements.
-- Because the scan runs every 5 seconds for as long as the app is open, it adds a small, constant `ps` (and, when something matches, `lsof`) cost. It is not tied to the setting that hides the icon.
+- While the menu bar icon is on, the scan runs every 5 seconds for as long as the app is open, which adds a small, constant `ps` (and, when something matches, `lsof`) cost. When the icon is off nothing displays the result, so no scan runs; scanning resumes within one interval after the icon is turned back on.
 
 ## Menu contents
 
@@ -68,7 +69,7 @@ The menu has no Logs or Settings entries. Logs and Settings are pages inside the
 
 ## Settings
 
-Both settings are in **Settings → General** and follow the usual draft-and-Save behavior.
+Both settings are in **Settings → General** and follow the usual draft-and-Save behavior. The one exception is removing the icon with ⌘-drag, which has no draft to wait for and is saved immediately.
 
 ### Menu bar icon
 
@@ -100,7 +101,8 @@ Settings saved by older versions do not contain these two keys. They load with t
 | --- | --- |
 | `MenuBarIconStateTests.swift` | Symbols, on/busy/off rules, backend-independence, outside-server precedence. |
 | `ExternalServerScannerTests.swift` | Detection on Homebrew Python, mlx_lm forms, `uv`, app-owned servers, worker deduplication, non-listening and unrelated processes, the no-`lsof` fallback, `ps` and `lsof` parsing. |
-| `MenuBarSettingsTests.swift` | Setting defaults, loading older settings, round trip, the last-window rule. |
+| `ExternalServerMonitorTests.swift` | Scanning is skipped and the list cleared while the icon is off, and resumes when it is turned back on. |
+| `MenuBarSettingsTests.swift` | Setting defaults, loading older settings, round trip, the last-window rule, saving a ⌘-drag removal. |
 
 Not covered by automated tests, because they depend on a running app and window server: the activation-policy change that hides the Dock icon, the status item appearing and disappearing, and the live process scan.
 
@@ -110,3 +112,4 @@ Not covered by automated tests, because they depend on a running app and window 
 2. Run `rapid-mlx serve <model> --port 8090` in a terminal. Within about 5 seconds the icon shows the outside-server symbol and the menu lists it with its port.
 3. Turn **When all windows are closed** on, close the window: the Dock icon disappears and the menu bar icon stays. Choose **Manage…**: the Dock icon and window return.
 4. Turn the menu bar icon off, close the window with the option on: the app quits.
+5. With the menu bar icon off and the window open, run `rapid-mlx serve <model> --port 8090` in a terminal and confirm via Activity Monitor that the app spawns no `ps` / `lsof` processes. Turn the icon back on and confirm the server appears within about 5 seconds.
