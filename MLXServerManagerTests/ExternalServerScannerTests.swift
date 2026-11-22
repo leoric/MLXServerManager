@@ -24,7 +24,7 @@ final class ExternalServerScannerTests: XCTestCase {
     func testDetectsRapidMLXRunningOnHomebrewPython() {
         let ps = """
           500     1 /Applications/MLXServerManager.app/Contents/MacOS/MLXServerManager
-          700   300 \(homebrewPython) /Users/me/.local/bin/rapid-mlx serve mlx-community/Qwen3 --port 8080
+          700   300 \(homebrewPython) /opt/tools/bin/rapid-mlx serve mlx-community/Qwen3 --port 8080
         """
 
         let servers = detect(ps, listening: [700: [8080]])
@@ -42,8 +42,8 @@ final class ExternalServerScannerTests: XCTestCase {
     func testDetectsMLXLMInItsCommonForms() {
         let ps = """
           800   300 /opt/homebrew/bin/python3 -m mlx_lm.server --model mlx-community/Qwen3-8B-4bit --port=8081
-          810   300 /Users/me/.venv/bin/mlx_lm.server --model foo
-          820   300 /Users/me/.venv/bin/python3 -m mlx_lm server --model bar
+          810   300 /opt/venv/bin/mlx_lm.server --model foo
+          820   300 /opt/venv/bin/python3 -m mlx_lm server --model bar
           830   300 /bin/bash /opt/homebrew/bin/mlx_lm.server --model baz
         """
 
@@ -67,8 +67,8 @@ final class ExternalServerScannerTests: XCTestCase {
 
     func testResultsAreSortedAndUseLowestListeningPort() {
         let ps = """
-          900   300 /Users/me/.venv/bin/mlx_lm.server --model b
-          700   300 /Users/me/.venv/bin/rapid-mlx serve a
+          900   300 /opt/venv/bin/mlx_lm.server --model b
+          700   300 /opt/venv/bin/rapid-mlx serve a
         """
 
         let servers = detect(ps, listening: [900: [9001], 700: [8002, 8001]])
@@ -91,8 +91,8 @@ final class ExternalServerScannerTests: XCTestCase {
 
     func testForkedWorkersAreListedOnce() {
         let ps = """
-          700   300 \(homebrewPython) /Users/me/.local/bin/rapid-mlx serve m --port 8080
-          701   700 \(homebrewPython) /Users/me/.local/bin/rapid-mlx serve m --port 8080
+          700   300 \(homebrewPython) /opt/tools/bin/rapid-mlx serve m --port 8080
+          701   700 \(homebrewPython) /opt/tools/bin/rapid-mlx serve m --port 8080
           702   700 /x/bin/python3 -c from multiprocessing.resource_tracker import main;main(5)
         """
 
@@ -103,10 +103,10 @@ final class ExternalServerScannerTests: XCTestCase {
 
     func testProcessesThatAreNotListeningAreIgnored() {
         let ps = """
-          901   300 /Users/me/.venv/bin/rapid-mlx --help
-          902   300 /Users/me/.venv/bin/rapid-mlx models
+          901   300 /opt/venv/bin/rapid-mlx --help
+          902   300 /opt/venv/bin/rapid-mlx models
           903   300 grep rapid-mlx
-          904   300 /Users/me/.venv/bin/pip install rapid-mlx
+          904   300 /opt/venv/bin/pip install rapid-mlx
         """
 
         XCTAssertEqual(detect(ps, listening: [:]), [])
@@ -114,7 +114,7 @@ final class ExternalServerScannerTests: XCTestCase {
 
     func testUnrelatedProcessesMentioningRapidMLXAreIgnored() {
         let ps = """
-          910   300 /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper (Plugin).app/x --folder /Users/me/pro/rapid-mlx
+          910   300 /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper (Plugin).app/x --folder /opt/work/rapid-mlx
           911   300 /usr/bin/vim notes-rapid-mlx-serve.md
           912   300 tmux new-session rapid-mlx serve foo
         """
@@ -122,12 +122,44 @@ final class ExternalServerScannerTests: XCTestCase {
         XCTAssertEqual(detect(ps, listening: [910: [51234], 911: [1], 912: [2]]), [])
     }
 
+    func testListeningProcessesThatOnlyMentionTheNameAsAnArgumentAreIgnored() {
+        let ps = """
+          920   300 /opt/venv/bin/python3 -m http.server --directory /opt/work/rapid-mlx
+          921   300 /opt/venv/bin/python3 -m http.server -d /opt/work/mlx_lm
+          922   300 /bin/bash -c cd /opt/work/rapid-mlx
+        """
+
+        XCTAssertEqual(detect(ps, listening: [920: [8000], 921: [8001], 922: [8002]]), [])
+    }
+
+    func testUnrecognisedLaunchFormsAreStillDetectedWhenListening() {
+        let ps = """
+          930   300 /opt/venv/bin/python3 /opt/venv/bin/rapid-mlx qwen3 --port 8085
+          931   300 /usr/bin/env FOO=1 /opt/venv/bin/mlx_lm.server --port 8086
+          932   300 /opt/venv/bin/python3 -m mlx_lm.server --model m
+        """
+
+        let servers = detect(ps, listening: [930: [8085], 931: [8086], 932: [8087]])
+
+        XCTAssertEqual(servers.map(\.processIdentifier), [930, 931, 932])
+        XCTAssertEqual(servers.map(\.backend), [.rapidMLX, .mlxLM, .mlxLM])
+        XCTAssertEqual(servers.map(\.port), [8085, 8086, 8087])
+    }
+
+    func testServerEntryPointRequiresOnlyLauncherPlumbingBeforeIt() {
+        XCTAssertTrue(ExternalServerScanner.hasServerEntryPoint("rapid-mlx serve m"))
+        XCTAssertTrue(ExternalServerScanner.hasServerEntryPoint("/x/python3 -m mlx_lm server"))
+        XCTAssertTrue(ExternalServerScanner.hasServerEntryPoint("uv run rapid-mlx serve m"))
+        XCTAssertFalse(ExternalServerScanner.hasServerEntryPoint("/x/python3 -m http.server -d /x/rapid-mlx"))
+        XCTAssertFalse(ExternalServerScanner.hasServerEntryPoint("tmux new-session rapid-mlx serve m"))
+    }
+
     // MARK: - When lsof is unavailable
 
     func testFallsBackToStrictCommandLineMatching() {
         let ps = """
-          700   300 /Users/me/.venv/bin/rapid-mlx serve m --port 8001
-          701   300 /Users/me/.venv/bin/rapid-mlx --help
+          700   300 /opt/venv/bin/rapid-mlx serve m --port 8001
+          701   300 /opt/venv/bin/rapid-mlx --help
           702   300 /bin/bash /opt/homebrew/bin/some-wrapper rapid-mlx
         """
 

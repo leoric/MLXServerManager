@@ -78,6 +78,10 @@ nonisolated enum ExternalServerScanner {
 
             if listeningPorts != nil {
                 guard !ports.isEmpty else { continue }
+                // Listening is not enough: a Python http.server pointed at a directory called
+                // `rapid-mlx` also listens. Unless the command line is a recognised `serve`
+                // form, the Rapid-MLX / mlx-lm name must be what is actually being run.
+                guard details != nil || hasServerEntryPoint(row.command) else { continue }
             } else {
                 guard details != nil else { continue }
             }
@@ -135,6 +139,26 @@ nonisolated enum ExternalServerScanner {
         return nil
     }
 
+    /// Whether a Rapid-MLX / mlx-lm name is the program being run, rather than an argument.
+    ///
+    /// Only launcher plumbing (`python`, `-m`, `uv run`, `env FOO=1`, a shell) may come before it, so
+    /// `python -m http.server -d ~/code/rapid-mlx` does not count while `python rapid-mlx` and
+    /// `python3 -m mlx_lm server` do.
+    static func hasServerEntryPoint(_ command: String) -> Bool {
+        let tokens = command.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+        guard let first = tokens.first, isKnownLauncher(basename(first)) else { return false }
+        if isServerEntryName(basename(first)) { return true }
+
+        for token in tokens.dropFirst() {
+            let name = basename(token)
+            if isServerEntryName(name) { return true }
+            let isEnvironmentAssignment = !token.hasPrefix("-") && !token.contains("/") && token.contains("=")
+            let isLauncherPlumbing = isKnownLauncher(name) || name == "run" || token == "-m" || isEnvironmentAssignment
+            guard isLauncherPlumbing else { return false }
+        }
+        return false
+    }
+
     /// Parses `lsof -Fpn` output (`p<pid>` then `n<address>:<port>` lines).
     static func parseListeningPorts(_ lsofOutput: String) -> [Int32: [Int]] {
         var ports: [Int32: [Int]] = [:]
@@ -190,10 +214,12 @@ nonisolated enum ExternalServerScanner {
     private static func looksLikeInferenceServer(_ command: String) -> Bool {
         let tokens = command.split(separator: " ", omittingEmptySubsequences: true)
         guard let first = tokens.first, isKnownLauncher(basename(String(first))) else { return false }
-        return tokens.contains { token in
-            let name = basename(String(token)).lowercased()
-            return isRapidMLXName(name) || name == "mlx_lm.server" || name == "mlx_lm" || name.hasPrefix("mlx_lm.")
-        }
+        return tokens.contains { isServerEntryName(basename(String($0))) }
+    }
+
+    private static func isServerEntryName(_ name: String) -> Bool {
+        let lowered = name.lowercased()
+        return isRapidMLXName(lowered) || lowered == "mlx_lm.server" || lowered == "mlx_lm" || lowered.hasPrefix("mlx_lm.")
     }
 
     /// Matches case-insensitively: Homebrew / python.org Python shows up in `ps` as `.../Python.app/.../Python`.
